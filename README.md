@@ -66,7 +66,7 @@ Team Communication Preferences
 
 Approach
 
-- Backend first, break into 2 pairs and work on different parts of the backend (use Postman to verify
+- Backend first, break into 2 pairs and work on different parts of the backend (use Postman to verify)
 - Then change the pairings and repeat for the frontend
 
 # Technologies Used
@@ -199,255 +199,90 @@ app.use(cors({ origin: "*" }));
 app.listen(port, () => console.log(`Date-abase is listening on port ${port}`));
 ```
 
-Next we split up and started working on different components of the API. I was responsible for implementing the User model and routes, aswell as implementing user Authentication with postman.
+Next we split up and started working on different components of the API. I was working with my fellow developer to create the user controller.
 
-I started off by creating the User model with Mongoose
+This was the first time I had built a project using custom built api routes and creating a hashing system to encrypt users passwords in the database.
 
-```Javascript
-const userSchema = new mongoose.Schema(
-  {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    password: { type: String, required: true },
-    username: { type: String, required: true },
-    gender: String,
-    bio: String,
-    age: Number,
-    photoOne: String,
-    photoTwo: String,
-    photoThree: String,
-    interestedInGender: { type: [String], required: true },
-    location: String,
-    matches: [String],
-    surveyAnswersId: Number,
-  },
-  { timestamps: true }
-);
-
-const User = mongoose.model("User", userSchema);
-```
-
-Next I started to implement the user controllers to handle requests to the user endpoints.
-
-For Example here the controller function I wrote to handle requests to create a new user.
-
-```Javascript
-const createUser = async (req, res) => {
-  try {
-    const userInformation = req.body.user;
-    userInformation.password = bcrypt.hashSync(
-      userInformation.password,
-      10
-    );
-    const newUser = await User.create(userInformation);
-    res.status(200).json({ user: newUser });
-  } catch (error) {
-    res.status(406).json(error);
-  }
-};
-```
-
-Here you can see that I'm using Bcrypt to hash the Users password before it's stored in the database.
-
-Next I started implementing the route to authenticate the user. I created the following function to check if the passed username and password are valid
-
-```javascript
-const checkUser = async (username, password, res) => {
-  const user = await User.findOne({ username: username });
-  if (user) {
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-      const payload = {
-        id: user.id,
-      };
-      const token = jwt.sign(payload, jwtOptions.secretOrKey, {
-        expiresIn: 60,
-      });
-      return res.status(200).json({ success: true, token: token });
-    } else {
-      return res
-        .status(400)
-        .json({ success: false, message: "invalid username or password" });
-    }
-  } else {
-    return res
-      .status(400)
-      .json({ success: false, message: "invalid username or password" });
-  }
-};
-```
-
-Then I implemented the Login route
-
-```javascript
-router.post("/api/login", async (req, res) => {
-  const username = req.body.user.username;
-  const password = req.body.user.password;
-  if (username && password) {
-    try {
-      checkUser(username, password, res);
-    } catch (error) {
-      res.status(500).json({ error: error });
-    }
-  } else {
-    return res
-      .status(400)
-      .json({ error: "username and password are required" });
-  }
-});
-```
+I also decided to use the async/await method instead of the promise/catch method as I find this method easier to read and understand as I feel like closer to Javascript functions even if it is asynchronous.
 
 ## Front end
 
-My first goal with the front end was to make is so users can login and signup. Our app was structured so that a user must be logged in to use the dating app, and when a user is not logged in they can only see the login and signup pages.
+On the front end I worked a lot with a fellow developer to create the styling and the logic to get the data from the backend database and display it in the Browse section of the application.
 
-I started off by creating an instance of axios that automatically grabs the JWT token from local storage.
+Here is a snippet of code that displays the data from the database and checks to see if the user has already matched with the other users. This data is then passed to the UserCard component and displayed with the appropriate button for the match/not matched feature.
 
 ```javascript
-const authAxios = axios.create({
-  baseURL: "http://localhost:5007",
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  },
+const displayUsers = allUsers.map((otherUser) => {
+  // Check if current user is in this user's matches array
+  if (otherUser.matches.includes(currentUser._id)) {
+    otherUser.isMatched = true;
+  } else {
+    otherUser.isMatched = false;
+  }
+
+  return (
+    <UserCard
+      currentUser={currentUser}
+      otherUser={otherUser}
+      key={otherUser._id}
+      id={otherUser._id}
+      firstName={otherUser.firstName}
+      lastName={otherUser.lastName}
+      bio={otherUser.bio}
+      interestedInGender={otherUser.interestedInGender}
+      createdAt={otherUser.createdAt}
+      isMatched={otherUser.isMatched}
+      fetchData={fetchData}
+    />
+  );
 });
 ```
 
-I then created the login and signup forms.
-
-to login
+Here is the user card which I worked on with fellow developer Maxim Prestwich.
 
 ```javascript
-const submit = async () => {
-  const user = {
-    username: username,
-    password: password,
-  };
-  try {
-    const response = await authAxios.post(`${apiRoute}login`, { user: user });
-    localStorage.setItem("token", response.data.token);
-    setError("");
-    window.location.href = "/";
-  } catch (error) {
-    setError(error.response.data.message);
-  }
-};
-```
-
-to signup
-
-```javascript
-const submit = async () => {
-  const user = {
-    firstName: firstName,
-    lastName: lastName,
-    username: username,
-    password: password,
-    interestedInGender: gender,
-  };
-  try {
-    const response = await authAxios.post(`${apiRoute}users`, { user: user });
-    if (response.status === 200) {
-      const loginResponse = await authAxios.post(`${apiRoute}login`, {
-        user: { username: user.username, password: user.password },
-      });
-      localStorage.setItem("token", loginResponse.data.token);
-      setError("");
-      window.location.href = "/";
-    }
-    setError("");
-    window.location.href = "/";
-  } catch (error) {
-    setError(error.response.data.message);
-  }
-};
-```
-
-Having implemented the ability for Users to login and signup. I could then implement conditional routing in the app.js file.
-
-Throughout the rest of the projects I contributed across most areas of the frontend but primarily with the dashboard. Perhaps the thing I was most happy with was implementing image upload widget and creating the photo scroller component.
-
-The was an extremely important feature to add considering the project is a dating app.
-
-I used cloudinary to create the following upload widget.
-
-```javascript
-const UploadWidget = ({ handleUploadImage, user, setUser }) => {
-  const cloudinaryRef = useRef();
-  const widgetRef = useRef();
-  useEffect(() => {
-    cloudinaryRef.current = window.cloudinary;
-    widgetRef.current = cloudinaryRef.current.createUploadWidget(
-      {
-        cloudName: "dxhrzidss",
-        uploadPreset: "erss230u",
-      },
-      (error, result) => {
-        if (result.event === "success") {
-          handleUploadImage(result.info["public_id"], user, setUser);
+const interestedInGenders = interestedInGender.map( (gender) => {
+        switch (gender) {
+            case "M":
+                return "men"
+                break;
+            case "F":
+                return "women"
+                break;
+            case "O":
+                return "people with other gender indentities"
+                break;
         }
-      }
-    );
-  }, []);
+    }).join(" and ");
 
-  return (
-    <button
-      className="bg-red-500 rounded px-2 text-white font-bold"
-      onClick={() => widgetRef.current.open()}
-    >
-      Change
-    </button>
-  );
-};
+        return (
+
+        <div className="border w-100 mx-4 my-4 px-4 py-4 bg-[#e8e8e890]">
+            <h2 className="text-3xl text-center py-4">{firstName} {lastName}</h2>
+            <p className='text-center px-6'>Hi I'm {firstName} and I'm interested in meeting {interestedInGenders}</p>
+
+
+            <UserPhoto imageUrl={photos[0]} />
+            <p className='text-center pb-8'>I joined DaterBase on {joinedAt}</p>
+            <div className='flex flex-col items-center'>
+                <div>
+
+                {isMatched && <button className="text-4xl bg-red-500 text-white rounded-full px-5 py-4 mr-6 focus:bg-green-500 focus:text-black hover:shadow-2xl hover:bg-yellow-400 hover:text-black" onClick={handleRemoveMatch}>N</button>}
+                {!isMatched && <button className="text-4xl bg-green-500 text-white rounded-full px-6 py-4 ml-6 focus:bg-green-500 focus:text-black hover:shadow-2xl hover:bg-yellow-400 hover:text-black" onClick={handleAddMatch}> Y</button>}
+                </div>
+                </div>
+        </div>
 ```
 
-Here I am using a useEffect hook to instantiate the upload widget and to define the callback function when a photo is uploaded.
+One of the other major things I learnt and now use regularly is tailwind CSS. I find that using this for layouts and responsive design is great and I can create great UX that look great.
 
-To render the images from cloudinary I created the following component.
+My use of Tailwind for the layout and styling of the site can be seen through all the pages and I utilised my Photoshop skills to soften the background image contrast.
 
-```javaScript
-const UserPhoto = ({ imageUrl }) => {
-  const myCld = new Cloudinary({
-    cloud: {
-      cloudName: "dxhrzidss",
-    },
-  });
+Here is an example of how I utilised Tailwind CSS in this project
 
-  return (
-    <img
-      height={1080}
-      width={1080}
-      src={myCld
-        .image(imageUrl)
-        .resize(Resize.crop().height(2500).width(2500).gravity("auto"))
-        .resize(Resize.fill().width(1080).height(1080))
-        .quality("auto")
-        .format("auto")
-        .toURL()}
-    />
-  );
-};
+```javascript
+  <div className="h-screen w-full flex justify-center items-center flex-col bg-[url('../src/static/images/AdobeStock_88856691.jpeg')] bg-top bg-cover">
+        <div className="w-full -mt-7">
+          <h1 className="text-7xl text-white text text-center text-shadow mb-8">DaterBase</h1>
+          </div>
 ```
-
-# Challenges
-
-- Deploying the project which was something I handled on my own last minute before the deadline. It took me a while to realize that heroku doesn't recongnise .env variables but instead heroku needs to be given its own config vars.
-
-- Pull Requests. There were a few times when bugs were pulled into the upstream repository. This was a huge time waste becuase It would halt progress for the entire team until we could resolve it.
-
-# Wins
-
-- I am pleased that our team worked seamlessly together. Throughout the project there was amazing communication, collaboration and clarity between the team members. This made debugging, pair programming and resolving merge conflicts a breeze
-
-- I am happy with my implementation of authentication using postman.
-
-# Key Learnings/Takeaways
-
-- This was my first project where I've built an API with Express and I found using the library very intuitive and enjoyable.
-
-- Working with a cloud service to store images
-
-# Future improvements
-
-- The UI could be improved a lot
-- I would like to add an algorith to match users. Currently users to matched with anyone in their gender preference.
-- I would like to add the ability for users to have a live chat someone they've matched with
