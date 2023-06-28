@@ -203,7 +203,7 @@ Next we split up and started working on different components of the API. I was w
 
 This was the first time I had built a project using custom built api routes and creating a hashing system to encrypt users passwords in the database.
 
-I also decided to use the async/await method instead of the promise/catch method as I find this method easier to read and understand as I feel like closer to Javascript functions even if it is asynchronous.
+I also decided to use the async/await method instead of the promise/catch method as I find this method easier to read and understand as I feel like it is syntactically closer to Javascript functions even if it is asynchronous.
 
 ## Front end
 
@@ -274,9 +274,9 @@ const interestedInGenders = interestedInGender.map( (gender) => {
         </div>
 ```
 
-One of the other major things I learnt and now use regularly is tailwind CSS. I find that using this for layouts and responsive design is great and I can create great UX that look great.
+One of the other major things I learnt and now use regularly is tailwind CSS. I find that using this for layouts and responsive design is great and I can create great UX that is easy to style.
 
-My use of Tailwind for the layout and styling of the site can be seen through all the pages and I utilised my Photoshop skills to soften the background image contrast.
+My use of Tailwind CSS for the layout and styling of the site can be seen through all the pages and I utilised my Photoshop skills to soften the background image contrast.
 
 Here is an example of how I utilised Tailwind CSS in this project
 
@@ -286,3 +286,33 @@ Here is an example of how I utilised Tailwind CSS in this project
           <h1 className="text-7xl text-white text text-center text-shadow mb-8">DaterBase</h1>
           </div>
 ```
+
+### Bugs and Issues
+
+We experienced a number of bugs and issues through this project, a major one was when we were working on the authentication section of the backend using bcrypt. For this bug we eventually managed to resolve the issue of not getting the right data from the requests on the front end.
+
+### Wins
+
+I think my biggest win for this project was working with Maxim to find a solution for our image upload feature. After some research we realised that we could not store the images in the database as they contained too much data to be used with an api call. Instead we had to find a cloud based solution for our image upload feature and came across Cloudinary, which we realised integrated really easily with React.js. After some tweaking and playing around with the application we were able to store the URL for the image in our database which would then load the appropriate image from the linked Cloudinary server.
+
+### MIT License
+
+Copyright (c) [2023] [Patrick Mallery]
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
